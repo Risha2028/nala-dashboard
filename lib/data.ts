@@ -1,7 +1,9 @@
+import { supabase } from "./supabase";
+
 export interface ThrowData {
   throwNumber: number;
   returnTimeSeconds: number;
-  distanceFeet: number;
+  distanceFeet: number; // mapped from motor_speed
 }
 
 export interface Session {
@@ -31,76 +33,156 @@ export function getRatingLabel(rating: number): string {
   return "Tough day — Nala wore out early";
 }
 
-function makeThrows(
-  total: number,
-  fatigueOnset: number,
-  baseReturn: number,
-  baseDistance: number
-): ThrowData[] {
-  return Array.from({ length: total }, (_, i) => {
-    const n = i + 1;
-    const isFatigued = n >= fatigueOnset;
-    const fatigueFactor = isFatigued ? 1 + ((n - fatigueOnset) / (total - fatigueOnset + 1)) * 0.8 : 1;
-    const jitter = () => (Math.random() - 0.5) * 2;
-    return {
-      throwNumber: n,
-      returnTimeSeconds: parseFloat((baseReturn * fatigueFactor + jitter()).toFixed(1)),
-      distanceFeet: parseFloat(
-        Math.max(15, baseDistance * (isFatigued ? 0.92 : 1) + jitter() * 3).toFixed(1)
-      ),
-    };
-  });
-}
-
-function avg(arr: number[]) {
+function avg(arr: number[]): number {
+  if (!arr.length) return 0;
   return parseFloat((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1));
 }
 
-function buildSession(
-  id: string,
-  date: string,
-  rating: number,
-  fatigueOnset: number,
-  total: number,
-  baseReturn: number,
-  baseDistance: number
-): Session {
-  const throws = makeThrows(total, fatigueOnset, baseReturn, baseDistance);
-  const fatigueLevelPercent = Math.round(
-    Math.min(100, ((total - fatigueOnset + 1) / total) * 100 * 1.2)
-  );
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapThrow(row: any): ThrowData {
   return {
-    id,
-    date,
-    rating,
-    fatigueOnsetThrow: fatigueOnset,
-    totalThrows: total,
-    avgReturnTime: avg(throws.map((t) => t.returnTimeSeconds)),
-    avgDistance: avg(throws.map((t) => t.distanceFeet)),
+    throwNumber: Number(row.throw_number),
+    returnTimeSeconds: Number(row.return_time),   // DB col: return_time
+    distanceFeet: Number(row.motor_speed),         // DB col: motor_speed
+  };
+}
+
+function computeStats(throws: ThrowData[], totalThrows: number) {
+  if (!throws.length) {
+    return { avgReturnTime: 0, avgDistance: 0, fatigueOnsetThrow: totalThrows, fatigueLevelPercent: 0 };
+  }
+
+  const sorted = [...throws].sort((a, b) => a.throwNumber - b.throwNumber);
+  const avgReturnTime = avg(sorted.map((t) => t.returnTimeSeconds));
+  const avgDistance = avg(sorted.map((t) => t.distanceFeet));
+
+  // Fatigue onset: first throw where return time exceeds 1.3× the first-3 baseline
+  let fatigueOnsetThrow = totalThrows;
+  if (sorted.length >= 4) {
+    const baseline = avg(sorted.slice(0, 3).map((t) => t.returnTimeSeconds));
+    const onset = sorted.find((t) => t.returnTimeSeconds > baseline * 1.3);
+    if (onset) fatigueOnsetThrow = onset.throwNumber;
+  }
+
+  const fatigueLevelPercent = fatigueOnsetThrow < totalThrows
+    ? Math.round(Math.min(100, ((totalThrows - fatigueOnsetThrow + 1) / totalThrows) * 100 * 1.3))
+    : 10;
+
+  return { avgReturnTime, avgDistance, fatigueOnsetThrow, fatigueLevelPercent };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatDate(raw: string): string {
+  const d = new Date(raw);
+  return isNaN(d.getTime())
+    ? raw
+    : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function mapSession(row: any, throws: ThrowData[] = []): Session {
+  const totalThrows = Number(row.total_throws);
+  const { avgReturnTime, avgDistance, fatigueOnsetThrow, fatigueLevelPercent } =
+    computeStats(throws, totalThrows);
+
+  return {
+    id: String(row.id),
+    date: formatDate(row.date),
+    rating: Number(row.rating),
+    fatigueOnsetThrow,
+    totalThrows,
+    avgReturnTime,
+    avgDistance,
     fatigueLevelPercent,
     throws,
   };
 }
 
-export const sessions: Session[] = [
-  buildSession("s1", "Apr 28, 2026", 9, 20, 24, 8.2, 38),
-  buildSession("s2", "Apr 25, 2026", 7, 14, 20, 9.1, 34),
-  buildSession("s3", "Apr 22, 2026", 8, 18, 25, 8.5, 40),
-  buildSession("s4", "Apr 19, 2026", 4, 8,  15, 11.0, 30),
-  buildSession("s5", "Apr 16, 2026", 6, 12, 19, 9.8, 33),
-  buildSession("s6", "Apr 13, 2026", 8, 17, 22, 8.3, 37),
-  buildSession("s7", "Apr 10, 2026", 7, 13, 18, 9.4, 35),
-  buildSession("s8", "Apr 7,  2026", 3, 6,  12, 12.5, 28),
-];
+export async function fetchSessions(): Promise<Session[]> {
+  console.log("[fetchSessions] querying Supabase...");
 
-export function getOverviewStats() {
-  const now = new Date("2026-04-29");
+  // Nested select so we can compute avgReturnTime for the session list cards
+  const response = await supabase
+    .from("sessions")
+    .select("id, date, rating, total_throws, throws(throw_number, return_time, motor_speed)")
+    .order("date", { ascending: false });
+
+  console.log("[fetchSessions] RAW RESPONSE:", JSON.stringify({
+    data: response.data,
+    error: response.error,
+    status: response.status,
+    statusText: response.statusText,
+  }, null, 2));
+
+  const { data, error } = response;
+
+  if (error) {
+    console.error("[fetchSessions] error:", JSON.stringify(error));
+    return [];
+  }
+
+  console.log("[fetchSessions] rows returned:", data?.length ?? 0);
+
+  return (data ?? []).map((row) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const throws = ((row as any).throws ?? []).map(mapThrow);
+    return mapSession(row, throws);
+  });
+}
+
+export async function fetchSession(id: string): Promise<Session | null> {
+  console.log("[fetchSession] querying id:", id);
+
+  const [sessionResponse, throwsResponse] = await Promise.all([
+    supabase
+      .from("sessions")
+      .select("id, date, rating, total_throws")
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("throws")
+      .select("throw_number, return_time, motor_speed")
+      .eq("session_id", id)
+      .order("throw_number", { ascending: true }),
+  ]);
+
+  console.log("[fetchSession] session RAW:", JSON.stringify({
+    data: sessionResponse.data,
+    error: sessionResponse.error,
+    status: sessionResponse.status,
+  }, null, 2));
+
+  console.log("[fetchSession] throws RAW:", JSON.stringify({
+    data: throwsResponse.data,
+    error: throwsResponse.error,
+    status: throwsResponse.status,
+    count: throwsResponse.data?.length ?? 0,
+  }, null, 2));
+
+  const { data: row, error: sessionErr } = sessionResponse;
+  const { data: throwRows, error: throwErr } = throwsResponse;
+
+  if (sessionErr || !row) {
+    console.error("[fetchSession] session error:", JSON.stringify(sessionErr));
+    return null;
+  }
+  if (throwErr) {
+    console.error("[fetchSession] throws error:", JSON.stringify(throwErr));
+  }
+
+  const throws = throwRows ? throwRows.map(mapThrow) : [];
+  console.log("[fetchSession] mapped throws count:", throws.length);
+
+  return mapSession(row, throws);
+}
+
+export function getOverviewStats(sessions: Session[]) {
+  const now = new Date();
   const thisWeek = sessions.filter((s) => {
-    const d = new Date(s.date.replace(/\s+/g, " "));
+    const d = new Date(s.date);
     return (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24) <= 7;
   });
   const lastWeek = sessions.filter((s) => {
-    const d = new Date(s.date.replace(/\s+/g, " "));
+    const d = new Date(s.date);
     const days = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
     return days > 7 && days <= 14;
   });
@@ -114,13 +196,12 @@ export function getOverviewStats() {
   const lastWeekFitness = lastWeek.length
     ? Math.round(avg(lastWeek.map((s) => s.rating)) * 10)
     : 0;
-  const fitnessImprovement = thisWeekFitness - lastWeekFitness;
 
   return {
     sessionsThisWeek: thisWeek.length,
     avgRating,
     avgReturnTime,
     fitnessLevel: thisWeekFitness,
-    fitnessImprovement,
+    fitnessImprovement: thisWeekFitness - lastWeekFitness,
   };
 }

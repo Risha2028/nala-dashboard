@@ -1,7 +1,9 @@
-import { sessions, getOverviewStats, type Session } from "@/lib/data";
+import { fetchSessions, getOverviewStats, type Session } from "@/lib/data";
 import StatCard from "@/components/StatCard";
 import SessionCard from "@/components/SessionCard";
 import RatingTrendChart from "@/components/RatingTrendChart";
+
+export const dynamic = "force-dynamic";
 
 
 function PawPrint({ size, rotation, opacity = 0.12 }: { size: number; rotation: number; opacity?: number }) {
@@ -148,10 +150,15 @@ function getRecommendation(session: Session): { isPlayDay: boolean; body: string
   };
 }
 
-export default function Home() {
+export default async function Home() {
+  const sessions = await fetchSessions();
+  console.log("[page/Home] sessions count:", sessions.length);
+  console.log("[page/Home] first session:", JSON.stringify(sessions[0] ?? null));
   const { sessionsThisWeek, avgRating, avgReturnTime, fitnessLevel, fitnessImprovement } =
-    getOverviewStats();
-  const { isPlayDay, body: recBody } = getRecommendation(sessions[0]);
+    getOverviewStats(sessions);
+  const { isPlayDay, body: recBody } = sessions.length
+    ? getRecommendation(sessions[0])
+    : { isPlayDay: true, body: "No sessions recorded yet. Go fetch!" };
 
   return (
     <>

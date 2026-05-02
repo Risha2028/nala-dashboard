@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { sessions, getRatingLabel, getPill } from "@/lib/data";
+import { fetchSession, getRatingLabel, getPill, type Session } from "@/lib/data";
 import StatChip from "@/components/StatChip";
 import ThrowChart from "@/components/ThrowChart";
 import FatigueBar from "@/components/FatigueBar";
@@ -10,13 +10,22 @@ import PillBadge from "@/components/PillBadge";
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const session = sessions.find((s) => s.id === id);
+
+  const [session, setSession] = useState<Session | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [analysis, setAnalysis] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  useEffect(() => {
+    fetchSession(id).then((s) => {
+      setSession(s);
+      setSessionLoading(false);
+    });
+  }, [id]);
 
   useEffect(() => {
     if (!session) return;
-    setLoading(true);
+    setAnalysisLoading(true);
     fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -25,8 +34,19 @@ export default function SessionDetail() {
       .then((r) => r.json())
       .then((d) => setAnalysis(d.analysis))
       .catch(() => setAnalysis("Analysis could not be loaded."))
-      .finally(() => setLoading(false));
+      .finally(() => setAnalysisLoading(false));
   }, [session]);
+
+  if (sessionLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ background: "#f0f7ff" }}>
+        <div
+          className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: "#378add", borderTopColor: "transparent" }}
+        />
+      </div>
+    );
+  }
 
   if (!session) {
     return (
@@ -114,7 +134,7 @@ export default function SessionDetail() {
             AI Session Analysis
           </h3>
         </div>
-        {loading ? (
+        {analysisLoading ? (
           <div className="flex items-center gap-2">
             <div
               className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"

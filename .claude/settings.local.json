@@ -6,7 +6,13 @@
       "PowerShell($key = \"AIzaSyDQuf619vcbzQERmR8h3-AwZib4PRqsIJk\"; $body = '{\"contents\":[{\"parts\":[{\"text\":\"Say hello in one word\"}]}]}'; try { $r = Invoke-WebRequest -Uri \"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$key\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing; $r.Content | ConvertFrom-Json | Select-Object -ExpandProperty candidates | Select-Object -First 1 | ForEach-Object { $_.content.parts[0].text } } catch { \"Error: $\\($_.Exception.Message\\)\" })",
       "PowerShell(Start-Sleep -Seconds 10; $key = \"AIzaSyDQuf619vcbzQERmR8h3-AwZib4PRqsIJk\"; $body = '{\"contents\":[{\"parts\":[{\"text\":\"Say hello in one word\"}]}]}'; try { $r = Invoke-WebRequest -Uri \"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$key\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing; \\($r.Content | ConvertFrom-Json\\).candidates[0].content.parts[0].text } catch { $_.Exception.Message })",
       "PowerShell(npx tsc --noEmit --project \"C:\\\\Users\\\\risha\\\\nala-dashboard\\\\tsconfig.json\" 2>&1)",
-      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\" } catch { \"Error: $_\" })"
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\" } catch { \"Error: $_\" })",
+      "PowerShell(Get-Process *)",
+      "PowerShell(taskkill *)",
+      "PowerShell(cd \"C:\\\\Users\\\\risha\\\\nala-dashboard\"; Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\Users\\\\risha\\\\nala-dashboard'; npm run dev\" -PassThru | Select-Object Id; Start-Sleep -Seconds 8; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Server up — Status: $\\($r.StatusCode\\)\" } catch { \"Server not ready yet: $_\" })",
+      "PowerShell(Start-Sleep -Seconds 6; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Running at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet\" })",
+      "PowerShell(Start-Sleep -Seconds 4; try { $r = Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing; \"Up at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not ready\" })",
+      "PowerShell(Start-Sleep -Seconds 7; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet — $_\" })"
     ]
   }
 }
