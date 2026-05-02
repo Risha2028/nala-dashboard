@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($body = '{\"id\":\"s1\",\"date\":\"Apr 28, 2026\",\"rating\":9,\"fatigueOnsetThrow\":20,\"totalThrows\":24,\"avgReturnTime\":8.4,\"avgDistance\":38.1,\"fatigueLevelPercent\":25}'; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/api/analyze\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\"; $r.Content | ConvertFrom-Json | Select-Object -ExpandProperty analysis } catch { \"Error: $_\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/api/analyze\" -Method POST -Body '{\"id\":\"s1\",\"date\":\"Apr 28, 2026\",\"rating\":9,\"fatigueOnsetThrow\":20,\"totalThrows\":24,\"avgReturnTime\":8.4,\"avgDistance\":38.1,\"fatigueLevelPercent\":25}' -ContentType \"application/json\" -UseBasicParsing; $r.Content } catch { $_.Exception.Response.StatusCode; $stream = $_.Exception.Response.GetResponseStream\\(\\); $reader = New-Object System.IO.StreamReader\\($stream\\); $reader.ReadToEnd\\(\\) })",
+      "PowerShell($key = \"AIzaSyDQuf619vcbzQERmR8h3-AwZib4PRqsIJk\"; $body = '{\"contents\":[{\"parts\":[{\"text\":\"Say hello in one word\"}]}]}'; try { $r = Invoke-WebRequest -Uri \"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$key\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing; $r.Content | ConvertFrom-Json | Select-Object -ExpandProperty candidates | Select-Object -First 1 | ForEach-Object { $_.content.parts[0].text } } catch { \"Error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(Start-Sleep -Seconds 10; $key = \"AIzaSyDQuf619vcbzQERmR8h3-AwZib4PRqsIJk\"; $body = '{\"contents\":[{\"parts\":[{\"text\":\"Say hello in one word\"}]}]}'; try { $r = Invoke-WebRequest -Uri \"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$key\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing; \\($r.Content | ConvertFrom-Json\\).candidates[0].content.parts[0].text } catch { $_.Exception.Message })",
+      "PowerShell(npx tsc --noEmit --project \"C:\\\\Users\\\\risha\\\\nala-dashboard\\\\tsconfig.json\" 2>&1)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\" } catch { \"Error: $_\" })"
+    ]
+  }
+}
