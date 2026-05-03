@@ -12,7 +12,9 @@
       "PowerShell(cd \"C:\\\\Users\\\\risha\\\\nala-dashboard\"; Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\Users\\\\risha\\\\nala-dashboard'; npm run dev\" -PassThru | Select-Object Id; Start-Sleep -Seconds 8; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Server up — Status: $\\($r.StatusCode\\)\" } catch { \"Server not ready yet: $_\" })",
       "PowerShell(Start-Sleep -Seconds 6; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Running at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet\" })",
       "PowerShell(Start-Sleep -Seconds 4; try { $r = Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing; \"Up at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not ready\" })",
-      "PowerShell(Start-Sleep -Seconds 7; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet — $_\" })"
+      "PowerShell(Start-Sleep -Seconds 7; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet — $_\" })",
+      "PowerShell(pip install *)",
+      "PowerShell(Get-Content *)"
     ]
   }
 }
