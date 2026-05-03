@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { fetchSession, getRatingLabel, getPill, type Session } from "@/lib/data";
 import StatChip from "@/components/StatChip";
 import ThrowChart from "@/components/ThrowChart";
-import FatigueBar from "@/components/FatigueBar";
 import PillBadge from "@/components/PillBadge";
 
 export default function SessionDetail() {
@@ -34,6 +33,9 @@ export default function SessionDetail() {
         totalThrows: session.totalThrows,
         duration: session.duration,
         throws: session.throws,
+        fatigueRatio: session.fatigueRatio,
+        first3avg: session.first3avg,
+        last3avg: session.last3avg,
       }),
     })
       .then((r) => r.json())
@@ -115,21 +117,15 @@ export default function SessionDetail() {
       </div>
 
       {/* Stat chips */}
-      <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <StatChip label="Total Throws" value={session.totalThrows} icon="🎾" />
         <StatChip label="Avg Return" value={`${session.avgReturnTime}s`} icon="⏱️" />
-        <StatChip label="Fatigue Onset" value={`#${session.fatigueOnsetThrow}`} icon="📉" />
-        <StatChip label="Avg Distance" value={`${session.avgDistance} ft`} icon="📏" />
+        <StatChip label="Avg Distance" value={`${session.avgDistance}m`} icon="📏" />
       </div>
 
       {/* Throw chart */}
       <div className="mb-6">
-        <ThrowChart throws={session.throws} fatigueOnsetThrow={session.fatigueOnsetThrow} />
-      </div>
-
-      {/* Fatigue bar */}
-      <div className="mb-6">
-        <FatigueBar percent={session.fatigueLevelPercent} />
+        <ThrowChart throws={session.throws} />
       </div>
 
       {/* LLM analysis */}

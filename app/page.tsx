@@ -126,28 +126,28 @@ function CloudDivider() {
 }
 
 function getRecommendation(session: Session): { isPlayDay: boolean; body: string } {
-  const { rating, fatigueOnsetThrow, totalThrows } = session;
+  const { rating, fatigueRatio, totalThrows } = session;
   if (rating >= 8) {
     return {
       isPlayDay: true,
-      body: `Nala had a standout ${rating}/10 today — she held strong returns through throw #${fatigueOnsetThrow} of ${totalThrows}. Plenty of energy in the tank. Keep the momentum going tomorrow with a full launcher session.`,
+      body: `Nala had a standout ${rating}/10 today — ${totalThrows} throws with a fatigue ratio of ${fatigueRatio} (barely tired). Plenty of energy in the tank. Keep the momentum going tomorrow with a full launcher session.`,
     };
   }
   if (rating >= 6) {
     return {
       isPlayDay: true,
-      body: `Solid ${rating}/10 session with good consistency. Nala is performing well. A lighter play session tomorrow — around 15 throws — will keep her sharp without overdoing it.`,
+      body: `Solid ${rating}/10 session. Nala is performing well with a fatigue ratio of ${fatigueRatio}. A lighter play session tomorrow — around 15 throws — will keep her sharp without overdoing it.`,
     };
   }
   if (rating >= 4) {
     return {
       isPlayDay: false,
-      body: `Nala showed early fatigue today, onset at throw #${fatigueOnsetThrow}. A rest day tomorrow will help her recover and come back stronger for the next session.`,
+      body: `Nala showed fatigue today (ratio ${fatigueRatio}) — her return times slowed noticeably by the end. A rest day tomorrow will help her recover and come back stronger.`,
     };
   }
   return {
     isPlayDay: false,
-    body: `Tough day for Nala — ${rating}/10 with fatigue kicking in at throw #${fatigueOnsetThrow}. Skip the launcher tomorrow and let her fully recover with light walks only.`,
+    body: `Tough day for Nala — ${rating}/10 with a fatigue ratio of ${fatigueRatio}, meaning she was much slower at the end. Skip the launcher tomorrow and let her fully recover with light walks only.`,
   };
 }
 

@@ -9,13 +9,14 @@ export interface ThrowData {
 export interface Session {
   id: string;
   date: string;
-  rating: number;
-  fatigueOnsetThrow: number;
+  rating: number;       // calculated from fatigueRatio, not from DB
   totalThrows: number;
   avgReturnTime: number;
-  avgDistance: number;
-  fatigueLevelPercent: number;
-  duration: number; // minutes
+  avgDistance: number;  // metres (motor_speed × 0.3)
+  duration: number;     // minutes
+  fatigueRatio: number;
+  first3avg: number;    // avg return time of first 3 throws
+  last3avg: number;     // avg return time of last 3 throws
   throws: ThrowData[];
 }
 
@@ -43,33 +44,42 @@ function avg(arr: number[]): number {
 function mapThrow(row: any): ThrowData {
   return {
     throwNumber: Number(row.throw_number),
-    returnTimeSeconds: Number(row.return_time),   // DB col: return_time
-    distanceFeet: Number(row.motor_speed),         // DB col: motor_speed
+    returnTimeSeconds: Number(row.return_time),
+    distanceFeet: Number(row.motor_speed) * 0.3, // calibration: speed% × 0.3 = metres
   };
 }
 
 function computeStats(throws: ThrowData[], totalThrows: number) {
   if (!throws.length) {
-    return { avgReturnTime: 0, avgDistance: 0, fatigueOnsetThrow: totalThrows, fatigueLevelPercent: 0 };
+    return { avgReturnTime: 0, avgDistance: 0, rating: 5.0, fatigueRatio: 1.0, first3avg: 0, last3avg: 0 };
   }
 
   const sorted = [...throws].sort((a, b) => a.throwNumber - b.throwNumber);
-  const avgReturnTime = avg(sorted.map((t) => t.returnTimeSeconds));
+  const returnTimes = sorted.map((t) => t.returnTimeSeconds);
+
+  const avgReturnTime = avg(returnTimes);
   const avgDistance = avg(sorted.map((t) => t.distanceFeet));
 
-  // Fatigue onset: first throw where return time exceeds 1.3× the first-3 baseline
-  let fatigueOnsetThrow = totalThrows;
-  if (sorted.length >= 4) {
-    const baseline = avg(sorted.slice(0, 3).map((t) => t.returnTimeSeconds));
-    const onset = sorted.find((t) => t.returnTimeSeconds > baseline * 1.3);
-    if (onset) fatigueOnsetThrow = onset.throwNumber;
-  }
+  // Fatigue ratio: avg of last 3 vs first 3 (fall back to single values if < 6 throws)
+  const first3avg = sorted.length >= 6
+    ? avg(returnTimes.slice(0, 3))
+    : returnTimes[0] ?? 0;
+  const last3avg = sorted.length >= 6
+    ? avg(returnTimes.slice(-3))
+    : returnTimes[returnTimes.length - 1] ?? 0;
+  const fatigueRatio = first3avg > 0
+    ? parseFloat((last3avg / first3avg).toFixed(2))
+    : 1.0;
 
-  const fatigueLevelPercent = fatigueOnsetThrow < totalThrows
-    ? Math.round(Math.min(100, ((totalThrows - fatigueOnsetThrow + 1) / totalThrows) * 100 * 1.3))
-    : 10;
+  // Algorithmic rating from fatigue ratio
+  let score = 7.0;
+  if (fatigueRatio > 2.0) score -= 1.5;
+  else if (fatigueRatio > 1.5) score -= 0.75;
+  if (fatigueRatio < 1.2) score += 1.0;
+  if (totalThrows > 20) score += 0.5;
+  const rating = Math.round(Math.min(10.0, Math.max(1.0, score)) * 10) / 10;
 
-  return { avgReturnTime, avgDistance, fatigueOnsetThrow, fatigueLevelPercent };
+  return { avgReturnTime, avgDistance, rating, fatigueRatio, first3avg, last3avg };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,20 +91,21 @@ function formatDate(raw: string): string {
 }
 
 function mapSession(row: any, throws: ThrowData[] = []): Session {
-  const totalThrows = Number(row.total_throws);
-  const { avgReturnTime, avgDistance, fatigueOnsetThrow, fatigueLevelPercent } =
+  const totalThrows = throws.length; // source of truth: actual rows in throws table
+  const { avgReturnTime, avgDistance, rating, fatigueRatio, first3avg, last3avg } =
     computeStats(throws, totalThrows);
 
   return {
     id: String(row.id),
     date: formatDate(row.date),
-    rating: Number(row.rating),
-    fatigueOnsetThrow,
+    rating,
     totalThrows,
     avgReturnTime,
     avgDistance,
-    fatigueLevelPercent,
     duration: Number(row.duration) || 0,
+    fatigueRatio,
+    first3avg,
+    last3avg,
     throws,
   };
 }

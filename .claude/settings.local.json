@@ -15,7 +15,8 @@
       "PowerShell(Start-Sleep -Seconds 7; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet — $_\" })",
       "PowerShell(pip install *)",
       "PowerShell(Get-Content *)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "PowerShell(Start-Sleep -Seconds 6; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet\" })"
     ]
   }
 }

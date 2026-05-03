@@ -7,17 +7,15 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceArea,
   Legend,
 } from "recharts";
 import { ThrowData } from "@/lib/data";
 
 interface Props {
   throws: ThrowData[];
-  fatigueOnsetThrow: number;
 }
 
-export default function ThrowChart({ throws, fatigueOnsetThrow }: Props) {
+export default function ThrowChart({ throws }: Props) {
   return (
     <div
       className="rounded-2xl p-5 shadow-sm"
@@ -28,23 +26,12 @@ export default function ThrowChart({ throws, fatigueOnsetThrow }: Props) {
           Throw-by-Throw Performance
         </h3>
         <p className="text-xs mt-0.5" style={{ color: "#94a3b8" }}>
-          Return time (s) &amp; throw distance (ft) — fatigue zone shaded
+          Return time (s) &amp; estimated distance (m) per throw
         </p>
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={throws} margin={{ top: 5, right: 20, left: -15, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e0eeff" />
-
-          {/* Fatigue zone highlight */}
-          {fatigueOnsetThrow <= throws.length && (
-            <ReferenceArea
-              x1={fatigueOnsetThrow}
-              x2={throws[throws.length - 1].throwNumber}
-              fill="#fef3c7"
-              fillOpacity={0.5}
-              label={{ value: "Fatigue Zone", position: "insideTopRight", fontSize: 10, fill: "#b45309" }}
-            />
-          )}
 
           <XAxis
             dataKey="throwNumber"
@@ -66,7 +53,7 @@ export default function ThrowChart({ throws, fatigueOnsetThrow }: Props) {
             tick={{ fontSize: 11, fill: "#0c447c" }}
             axisLine={false}
             tickLine={false}
-            label={{ value: "Distance (ft)", angle: 90, position: "insideRight", offset: 18, fontSize: 10, fill: "#0c447c" }}
+            label={{ value: "Distance (m)", angle: 90, position: "insideRight", offset: 18, fontSize: 10, fill: "#0c447c" }}
           />
           <Tooltip
             contentStyle={{
@@ -78,12 +65,12 @@ export default function ThrowChart({ throws, fatigueOnsetThrow }: Props) {
             formatter={(value, name) =>
               name === "returnTimeSeconds"
                 ? [`${value}s`, "Return Time"]
-                : [`${value} ft`, "Distance"]
+                : [`${value}m`, "Distance"]
             }
           />
           <Legend
             formatter={(value) =>
-              value === "returnTimeSeconds" ? "Return Time (s)" : "Distance (ft)"
+              value === "returnTimeSeconds" ? "Return Time (s)" : "Distance (m)"
             }
             wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
           />

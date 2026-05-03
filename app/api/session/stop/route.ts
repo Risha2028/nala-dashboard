@@ -34,19 +34,19 @@ export async function POST(req: NextRequest) {
   const throws: ThrowData[] = (throwRows ?? []).map((r) => ({
     throwNumber: Number(r.throw_number),
     returnTimeSeconds: Number(r.return_time),
-    distanceFeet: Number(r.motor_speed),
+    distanceFeet: Number(r.motor_speed) * 0.3, // calibration: speed% × 0.3 = metres
   }));
 
   const totalThrows = throws.length;
   const durationMinutes = Math.max(1, Math.round(duration));
   const metrics = calculateMetrics(throws, durationMinutes);
-  const rating = calculateRating(metrics.fatigueRatio, totalThrows, metrics.consistency);
+  const rating = calculateRating(metrics.fatigueRatio, totalThrows);
   const label = rating >= 8 ? "Great" : rating >= 6 ? "Good" : "Tired";
 
   // 3. Generate Gemini analysis
   let analysis = "";
   try {
-    analysis = await callGemini(buildPrompt(totalThrows, durationMinutes, metrics, rating));
+    analysis = await callGemini(buildPrompt(totalThrows, metrics, rating));
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     analysis =

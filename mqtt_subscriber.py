@@ -76,13 +76,11 @@ def validate_payload(data: dict) -> tuple[bool, str]:
 # ── Database write ────────────────────────────────────────────────────────────
 
 def insert_throw(data: dict) -> None:
-    """Write a validated throw payload to Supabase `throws` table."""
     row = {
         "session_id":   data["session_id"],
         "throw_number": int(data["throw_number"]),
         "motor_speed":  float(data["motor_speed"]),
         "return_time":  float(data["return_time"]),
-        # Use device timestamp if provided, otherwise server UTC now
         "timestamp": data.get("timestamp") or datetime.now().isoformat(),
     }
 
@@ -97,16 +95,18 @@ def insert_throw(data: dict) -> None:
         )
         return result
     except Exception as exc:
+        if "unique_session_throw" in str(exc) or "duplicate" in str(exc).lower():
+            log.info("Duplicate throw #%d skipped", row["throw_number"])
+            return
         log.error("Supabase insert failed: %s | row=%s", exc, row)
         raise
-
 
 # ── MQTT callbacks ────────────────────────────────────────────────────────────
 
 def on_connect(client: mqtt.Client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
         log.info("Connected to MQTT broker %s:%d", MQTT_BROKER, MQTT_PORT)
-        client.subscribe(MQTT_TOPIC, qos=1)
+        client.subscribe(MQTT_TOPIC, qos=0)
         log.info("Subscribed to topic: %s", MQTT_TOPIC)
     else:
         log.error("MQTT connection failed — reason code: %s", reason_code)
