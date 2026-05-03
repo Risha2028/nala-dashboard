@@ -2,6 +2,7 @@ import { fetchSessions, getOverviewStats, type Session } from "@/lib/data";
 import StatCard from "@/components/StatCard";
 import SessionCard from "@/components/SessionCard";
 import RatingTrendChart from "@/components/RatingTrendChart";
+import SessionControls from "@/components/SessionControls";
 
 export const dynamic = "force-dynamic";
 
@@ -209,6 +210,7 @@ export default async function Home() {
           <p style={{ fontSize: "14px", color: "#3a7aa8", marginTop: "4px" }}>
             Golden Retriever · 3 yrs · San Francisco
           </p>
+          <SessionControls />
         </div>
 
         {/* Animated paw trail */}

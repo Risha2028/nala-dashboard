@@ -15,6 +15,7 @@ export interface Session {
   avgReturnTime: number;
   avgDistance: number;
   fatigueLevelPercent: number;
+  duration: number; // minutes
   throws: ThrowData[];
 }
 
@@ -93,6 +94,7 @@ function mapSession(row: any, throws: ThrowData[] = []): Session {
     avgReturnTime,
     avgDistance,
     fatigueLevelPercent,
+    duration: Number(row.duration) || 0,
     throws,
   };
 }
@@ -103,7 +105,7 @@ export async function fetchSessions(): Promise<Session[]> {
   // Nested select so we can compute avgReturnTime for the session list cards
   const response = await supabase
     .from("sessions")
-    .select("id, date, rating, total_throws, throws(throw_number, return_time, motor_speed)")
+    .select("id, date, rating, total_throws, duration, throws(throw_number, return_time, motor_speed)")
     .order("date", { ascending: false });
 
   console.log("[fetchSessions] RAW RESPONSE:", JSON.stringify({
@@ -135,7 +137,7 @@ export async function fetchSession(id: string): Promise<Session | null> {
   const [sessionResponse, throwsResponse] = await Promise.all([
     supabase
       .from("sessions")
-      .select("id, date, rating, total_throws")
+      .select("id, date, rating, total_throws, duration")
       .eq("id", id)
       .single(),
     supabase

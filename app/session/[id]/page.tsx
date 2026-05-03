@@ -14,6 +14,7 @@ export default function SessionDetail() {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [analysis, setAnalysis] = useState<string>("");
+  const [calculatedRating, setCalculatedRating] = useState<number | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
 
   useEffect(() => {
@@ -29,10 +30,17 @@ export default function SessionDetail() {
     fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(session),
+      body: JSON.stringify({
+        totalThrows: session.totalThrows,
+        duration: session.duration,
+        throws: session.throws,
+      }),
     })
       .then((r) => r.json())
-      .then((d) => setAnalysis(d.analysis))
+      .then((d) => {
+        setAnalysis(d.analysis);
+        if (typeof d.rating === "number") setCalculatedRating(d.rating);
+      })
       .catch(() => setAnalysis("Analysis could not be loaded."))
       .finally(() => setAnalysisLoading(false));
   }, [session]);
@@ -56,8 +64,9 @@ export default function SessionDetail() {
     );
   }
 
-  const pill = getPill(session.rating);
-  const label = getRatingLabel(session.rating);
+  const displayRating = calculatedRating ?? session.rating;
+  const pill = getPill(displayRating);
+  const label = getRatingLabel(displayRating);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-10">
@@ -96,7 +105,7 @@ export default function SessionDetail() {
             Session Rating
           </p>
           <div className="flex items-end gap-1 mt-1">
-            <span className="text-5xl font-bold text-white">{session.rating}</span>
+            <span className="text-5xl font-bold text-white">{displayRating}</span>
             <span className="text-2xl font-medium mb-1" style={{ color: "#93c5fd" }}>
               /10
             </span>

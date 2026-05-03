@@ -1,59 +1,39 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  calculateMetrics,
+  calculateRating,
+  callGemini,
+  buildPrompt,
+  type ThrowData,
+} from "@/lib/analysis";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-async function callGemini(prompt: string, retries = 2): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-  for (let i = 0; i <= retries; i++) {
-    try {
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("429") && i < retries) {
-        await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
-        continue;
-      }
-      if (msg.includes("429")) {
-        throw new Error("RATE_LIMIT");
-      }
-      throw err;
-    }
-  }
-  throw new Error("RATE_LIMIT");
+interface AnalyzeRequest {
+  totalThrows: number;
+  duration: number;
+  throws: ThrowData[];
 }
 
 export async function POST(req: NextRequest) {
-  const session = await req.json();
+  const { totalThrows, duration, throws }: AnalyzeRequest = await req.json();
 
-  const prompt = `You are an expert dog trainer analyzing a ball launcher training session for Nala, a high-energy retriever mix.
-
-Session data:
-- Date: ${session.date}
-- Rating: ${session.rating}/10
-- Total throws: ${session.totalThrows}
-- Average return time: ${session.avgReturnTime}s
-- Fatigue onset at throw #${session.fatigueOnsetThrow}
-- Average throw distance: ${session.avgDistance} feet
-- Fatigue level: ${session.fatigueLevelPercent}%
-
-Write a single concise paragraph (3–4 sentences) analyzing this session. Mention Nala by name. Comment on her energy, stamina, return speed, and when fatigue set in. End with one actionable tip for the next session. Be warm, specific, and data-driven. Do not use bullet points or headers.`;
+  const metrics = calculateMetrics(throws, duration);
+  const rating = calculateRating(metrics.fatigueRatio, totalThrows, metrics.consistency);
+  const prompt = buildPrompt(totalThrows, duration, metrics, rating);
 
   try {
-    const text = await callGemini(prompt);
-    return NextResponse.json({ analysis: text });
+    const analysis = await callGemini(prompt);
+    return NextResponse.json({ rating, analysis });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg === "RATE_LIMIT") {
-      return NextResponse.json(
-        { analysis: "Gemini is temporarily rate-limited on the free tier. Try again in a few seconds — the analysis will appear automatically on your next visit." },
-        { status: 200 }
-      );
+      return NextResponse.json({
+        rating,
+        analysis: "Gemini is temporarily rate-limited. Try again in a few seconds.",
+      });
     }
     console.error("Gemini error:", err);
     return NextResponse.json(
-      { analysis: "Analysis unavailable — check your API key or network." },
+      { rating, analysis: "Analysis unavailable — check your API key or network." },
       { status: 500 }
     );
   }
