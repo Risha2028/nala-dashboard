@@ -16,7 +16,13 @@
       "PowerShell(pip install *)",
       "PowerShell(Get-Content *)",
       "PowerShell(New-Item *)",
-      "PowerShell(Start-Sleep -Seconds 6; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet\" })"
+      "PowerShell(Start-Sleep -Seconds 6; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet\" })",
+      "PowerShell(Start-Sleep -Seconds 8; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet — $_\" })",
+      "PowerShell(cd \"C:\\\\Users\\\\risha\\\\nala-dashboard\"; Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\Users\\\\risha\\\\nala-dashboard'; npm run dev\"; Start-Sleep -Seconds 9; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet\" })",
+      "PowerShell(Start-Sleep -Seconds 8; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet\" })",
+      "PowerShell(Start-Sleep -Seconds 10; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready at http://localhost:3000 — Status $\\($r.StatusCode\\)\" } catch { \"Not up yet\" })",
+      "PowerShell(Start-Sleep -Seconds 12; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; \"Ready — Status $\\($r.StatusCode\\)\" } catch { $_.Exception.Message })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; $r.Content | Select-String \"message\" | Select-Object -First 3 } catch { $_.Exception.Response.GetResponseStream\\(\\) | ForEach-Object { $reader = New-Object System.IO.StreamReader\\($_\\); $reader.ReadToEnd\\(\\) } | Select-String -Pattern '\"message\":\"[^\"]{0,200}' | Select-Object -First 1 })"
     ]
   }
 }

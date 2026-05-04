@@ -193,25 +193,41 @@ export default async function Home() {
           <PawPrint size={28} rotation={8} />
         </div>
 
-        {/* Greeting content */}
+        {/* Two-column hero content — aligns with stat card grid below */}
         <div
           style={{
             maxWidth: "48rem",
             margin: "0 auto",
-            padding: "40px 16px 72px",
+            padding: "0 16px",
             position: "relative",
+            zIndex: 2,
+            display: "flex",
+            alignItems: "flex-end",
           }}
         >
-          <p style={{ fontSize: "14px", fontWeight: 500, color: "#1a5f8a", marginBottom: "4px" }}>
-            Good morning, Nala&apos;s team 🐾
-          </p>
-          <h1 style={{ fontSize: "36px", fontWeight: 700, color: "#0c447c", margin: 0 }}>
-            Nala
-          </h1>
-          <p style={{ fontSize: "14px", color: "#3a7aa8", marginTop: "4px" }}>
-            Golden Retriever · 3 yrs · San Francisco
-          </p>
-          <SessionControls />
+          {/* Left column — text + button */}
+          <div style={{ flex: "0 0 50%", paddingTop: "40px", paddingBottom: "88px", textAlign: "left" }}>
+            <p style={{ fontSize: "14px", fontWeight: 500, color: "#1a5f8a", marginBottom: "4px" }}>
+              Good morning 🐾
+            </p>
+            <h1 style={{ fontSize: "36px", color: "#0c447c", margin: 0 }}>
+              Let&apos;s play, Nala
+            </h1>
+            <p style={{ fontSize: "14px", color: "#3a7aa8", marginTop: "4px" }}>
+              Labradoodle · 6 yrs · San Francisco
+            </p>
+            <SessionControls />
+          </div>
+
+          {/* Right column — illustration, bottom-aligned */}
+          <div style={{ flex: "0 0 50%", display: "flex", justifyContent: "flex-end", alignItems: "flex-end" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/dog-walking-3.svg"
+              alt=""
+              style={{ width: "100%", display: "block", pointerEvents: "none" }}
+            />
+          </div>
         </div>
 
         {/* Animated paw trail */}

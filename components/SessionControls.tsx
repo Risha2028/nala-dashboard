@@ -91,7 +91,7 @@ export default function SessionControls() {
   const isStopping = status === "stopping";
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "16px", flexWrap: "wrap" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: "10px", marginTop: "16px", flexWrap: "wrap" }}>
       {!isActive && !isStopping ? (
         <button
           onClick={handleStart}
@@ -99,16 +99,16 @@ export default function SessionControls() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            background: isStarting ? "#7db8d8" : "#378add",
+            gap: "8px",
+            background: isStarting ? "#4ade80" : "#16a34a",
             color: "#fff",
             border: "none",
-            borderRadius: "12px",
-            padding: "9px 20px",
-            fontSize: "13px",
+            borderRadius: "50px",
+            padding: "16px 40px",
+            fontSize: "16px",
             fontWeight: 600,
             cursor: isStarting ? "not-allowed" : "pointer",
-            boxShadow: "0 2px 8px rgba(55,138,221,0.3)",
+            boxShadow: "0 4px 14px rgba(22,163,74,0.35)",
             transition: "opacity 0.15s",
           }}
         >
