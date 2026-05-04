@@ -210,7 +210,7 @@ export default async function Home() {
             <p style={{ fontSize: "14px", fontWeight: 500, color: "#1a5f8a", marginBottom: "4px" }}>
               Good morning 🐾
             </p>
-            <h1 style={{ fontSize: "36px", color: "#0c447c", margin: 0 }}>
+            <h1 style={{ fontSize: "36px", fontWeight: 700, color: "#0c447c", margin: 0 }}>
               Let&apos;s play, Nala
             </h1>
             <p style={{ fontSize: "14px", color: "#3a7aa8", marginTop: "4px" }}>
@@ -300,7 +300,7 @@ export default async function Home() {
         </div>
 
         {/* Trend chart */}
-        <div className="mb-0">
+        <div className="mb-8">
           <RatingTrendChart sessions={sessions} />
         </div>
 
