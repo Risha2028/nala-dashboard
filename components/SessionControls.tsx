@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 type Status = "idle" | "active" | "stopping" | "starting";
 
 export default function SessionControls() {
   const router = useRouter();
+  const [, startTransition] = useTransition();
   const [status, setStatus] = useState<Status>("idle");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0); // seconds
@@ -73,10 +74,11 @@ export default function SessionControls() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to stop");
-      setMessage(`Session saved — ${data.totalThrows} throws · ${data.rating}/10`);
+      // Commit local state first, then refresh server data in the background
       setSessionId(null);
       setStatus("idle");
-      router.refresh(); // reload server data so new session appears in list
+      setMessage(`Session saved — ${data.totalThrows} throws · ${data.label}`);
+      startTransition(() => router.refresh());
     } catch (err) {
       setStatus("active"); // revert so they can retry
       startTimer();

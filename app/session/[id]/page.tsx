@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { fetchSession, getRatingLabel, getPill, type Session } from "@/lib/data";
+import { fetchSession, getRatingLabel, type Session } from "@/lib/data";
 import StatChip from "@/components/StatChip";
 import ThrowChart from "@/components/ThrowChart";
 import PillBadge from "@/components/PillBadge";
@@ -13,7 +13,6 @@ export default function SessionDetail() {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [analysis, setAnalysis] = useState<string>("");
-  const [calculatedRating, setCalculatedRating] = useState<number | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
 
   useEffect(() => {
@@ -32,17 +31,13 @@ export default function SessionDetail() {
       body: JSON.stringify({
         totalThrows: session.totalThrows,
         duration: session.duration,
-        throws: session.throws,
-        fatigueRatio: session.fatigueRatio,
-        first3avg: session.first3avg,
-        last3avg: session.last3avg,
+        totalDistance: session.totalDistance,
+        efficiency: session.efficiency,
+        avgReturnTime: session.avgReturnTime,
       }),
     })
       .then((r) => r.json())
-      .then((d) => {
-        setAnalysis(d.analysis);
-        if (typeof d.rating === "number") setCalculatedRating(d.rating);
-      })
+      .then((d) => setAnalysis(d.analysis))
       .catch(() => setAnalysis("Analysis could not be loaded."))
       .finally(() => setAnalysisLoading(false));
   }, [session]);
@@ -66,9 +61,7 @@ export default function SessionDetail() {
     );
   }
 
-  const displayRating = calculatedRating ?? session.rating;
-  const pill = getPill(displayRating);
-  const label = getRatingLabel(displayRating);
+  const label = getRatingLabel(session.efficiencyLabel);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-10">
@@ -90,37 +83,19 @@ export default function SessionDetail() {
           <h1 className="text-2xl font-bold" style={{ color: "#0c447c" }}>
             {session.date}
           </h1>
-          <PillBadge pill={pill} />
+          <PillBadge pill={session.efficiencyLabel} />
         </div>
         <p className="text-sm" style={{ color: "#64748b" }}>
           {label}
         </p>
       </div>
 
-      {/* Rating hero */}
-      <div
-        className="rounded-2xl p-6 mb-6 flex items-center justify-between shadow-sm"
-        style={{ background: "linear-gradient(135deg, #378add 0%, #0c447c 100%)" }}
-      >
-        <div>
-          <p className="text-sm font-medium" style={{ color: "#bfdbfe" }}>
-            Session Rating
-          </p>
-          <div className="flex items-end gap-1 mt-1">
-            <span className="text-5xl font-bold text-white">{displayRating}</span>
-            <span className="text-2xl font-medium mb-1" style={{ color: "#93c5fd" }}>
-              /10
-            </span>
-          </div>
-        </div>
-        <div className="text-6xl opacity-30">🐾</div>
-      </div>
-
       {/* Stat chips */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-4">
         <StatChip label="Total Throws" value={session.totalThrows} icon="🎾" />
-        <StatChip label="Avg Return" value={`${session.avgReturnTime}s`} icon="⏱️" />
-        <StatChip label="Avg Distance" value={`${session.avgDistance}m`} icon="📏" />
+        <StatChip label="Session Time" value={`${session.duration} min`} icon="⏱️" />
+        <StatChip label="Total Distance" value={`${session.totalDistance}m`} icon="📏" />
+        <StatChip label="Efficiency" value={`${session.efficiency}m/min`} icon="⚡" />
       </div>
 
       {/* Throw chart */}
@@ -139,7 +114,7 @@ export default function SessionDetail() {
             AI Session Analysis
           </h3>
         </div>
-        {analysisLoading ? (
+        {analysisLoading || !analysis ? (
           <div className="flex items-center gap-2">
             <div
               className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"

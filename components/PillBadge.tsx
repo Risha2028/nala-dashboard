@@ -1,12 +1,12 @@
-type Pill = "Great" | "Good" | "Tired";
+import type { EfficiencyLabel } from "@/lib/data";
 
-const styles: Record<Pill, { bg: string; text: string }> = {
-  Great: { bg: "#dbeafe", text: "#1d4ed8" },
-  Good:  { bg: "#dcfce7", text: "#15803d" },
-  Tired: { bg: "#fef3c7", text: "#b45309" },
+const styles: Record<EfficiencyLabel, { bg: string; text: string }> = {
+  "Energetic": { bg: "#dcfce7", text: "#15803d" },
+  "Good":      { bg: "#fef9c3", text: "#a16207" },
+  "Tired":     { bg: "#fee2e2", text: "#dc2626" },
 };
 
-export default function PillBadge({ pill }: { pill: Pill }) {
+export default function PillBadge({ pill }: { pill: EfficiencyLabel }) {
   const { bg, text } = styles[pill];
   return (
     <span

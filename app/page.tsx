@@ -126,28 +126,22 @@ function CloudDivider() {
 }
 
 function getRecommendation(session: Session): { isPlayDay: boolean; body: string } {
-  const { rating, fatigueRatio, totalThrows } = session;
-  if (rating >= 8) {
+  const { efficiencyLabel, efficiency, totalThrows, duration } = session;
+  if (efficiencyLabel === "Energetic") {
     return {
       isPlayDay: true,
-      body: `Nala had a standout ${rating}/10 today — ${totalThrows} throws with a fatigue ratio of ${fatigueRatio} (barely tired). Plenty of energy in the tank. Keep the momentum going tomorrow with a full launcher session.`,
+      body: `Nala is performing above average — ${efficiency}m/min efficiency over ${totalThrows} throws in ${duration} minutes. She's in great shape. Keep the momentum going tomorrow with another full session.`,
     };
   }
-  if (rating >= 6) {
+  if (efficiencyLabel === "Good") {
     return {
       isPlayDay: true,
-      body: `Solid ${rating}/10 session. Nala is performing well with a fatigue ratio of ${fatigueRatio}. A lighter play session tomorrow — around 15 throws — will keep her sharp without overdoing it.`,
-    };
-  }
-  if (rating >= 4) {
-    return {
-      isPlayDay: false,
-      body: `Nala showed fatigue today (ratio ${fatigueRatio}) — her return times slowed noticeably by the end. A rest day tomorrow will help her recover and come back stronger.`,
+      body: `Solid ${efficiency}m/min efficiency today — right in Nala's typical range. A lighter play session tomorrow (around 15 throws) will keep her sharp without overdoing it.`,
     };
   }
   return {
     isPlayDay: false,
-    body: `Tough day for Nala — ${rating}/10 with a fatigue ratio of ${fatigueRatio}, meaning she was much slower at the end. Skip the launcher tomorrow and let her fully recover with light walks only.`,
+    body: `Nala's efficiency came in below average at ${efficiency}m/min today. A rest day tomorrow will help her recover and come back stronger for the next session.`,
   };
 }
 
@@ -155,8 +149,15 @@ export default async function Home() {
   const sessions = await fetchSessions();
   console.log("[page/Home] sessions count:", sessions.length);
   console.log("[page/Home] first session:", JSON.stringify(sessions[0] ?? null));
-  const { sessionsThisWeek, avgRating, avgReturnTime, fitnessLevel, fitnessImprovement } =
-    getOverviewStats(sessions);
+  const {
+    sessionsThisWeek,
+    avgEfficiencyThisWeek, avgEfficiencyLastWeek,
+    totalDistanceThisWeek, totalDistanceLastWeek,
+    totalTimeThisWeek, totalTimeLastWeek,
+  } = getOverviewStats(sessions);
+  const effDelta = parseFloat((avgEfficiencyThisWeek - avgEfficiencyLastWeek).toFixed(1));
+  const distDelta = parseFloat((totalDistanceThisWeek - totalDistanceLastWeek).toFixed(1));
+  const timeDelta = totalTimeThisWeek - totalTimeLastWeek;
   const { isPlayDay, body: recBody } = sessions.length
     ? getRecommendation(sessions[0])
     : { isPlayDay: true, body: "No sessions recorded yet. Go fetch!" };
@@ -242,35 +243,43 @@ export default async function Home() {
             label="Sessions This Week"
             value={sessionsThisWeek}
             icon="📅"
-            delta={{ text: "↑ +1 vs last week", positive: true }}
             sub="in the last 7 days"
           />
           <StatCard
-            label="Avg Rating"
-            value={`${avgRating}/10`}
-            icon="⭐"
-            delta={{ text: "↑ +0.8 pts vs last week", positive: true }}
-            sub="across all sessions"
-          />
-          <StatCard
-            label="Avg Return Time"
-            value={`${avgReturnTime}s`}
-            icon="⏱️"
-            delta={{ text: "↓ 0.4s faster than last week", positive: true }}
-            sub="avg across all sessions"
-          />
-          <StatCard
-            label="Fitness Level"
-            value={`${fitnessLevel}%`}
-            icon="💪"
+            label="Avg Efficiency"
+            value={`${avgEfficiencyThisWeek}m/min`}
+            icon="⚡"
             delta={{
-              text:
-                fitnessImprovement >= 0
-                  ? `↑ +${fitnessImprovement} pts vs last week`
-                  : `↓ ${Math.abs(fitnessImprovement)} pts vs last week`,
-              positive: fitnessImprovement >= 0,
+              text: effDelta >= 0
+                ? `↑ +${effDelta} m/min vs last week`
+                : `↓ ${Math.abs(effDelta)} m/min vs last week`,
+              positive: effDelta >= 0,
             }}
-            sub="based on this week's sessions"
+            sub="this week"
+          />
+          <StatCard
+            label="Total Distance This Week"
+            value={`${totalDistanceThisWeek}m`}
+            icon="📏"
+            delta={{
+              text: distDelta >= 0
+                ? `↑ +${distDelta}m vs last week`
+                : `↓ ${Math.abs(distDelta)}m vs last week`,
+              positive: distDelta >= 0,
+            }}
+            sub="this week"
+          />
+          <StatCard
+            label="Total Time This Week"
+            value={`${totalTimeThisWeek} min`}
+            icon="⏱️"
+            delta={{
+              text: timeDelta >= 0
+                ? `↑ +${timeDelta} min vs last week`
+                : `↓ ${Math.abs(timeDelta)} min vs last week`,
+              positive: timeDelta >= 0,
+            }}
+            sub="this week"
           />
         </div>
 

@@ -53,11 +53,14 @@ export function calculateRating(fatigueRatio: number, totalThrows: number): numb
 
 export function buildPrompt(
   totalThrows: number,
+  duration: number,
   metrics: Metrics,
-  rating: number
 ): string {
-  const { fatigueRatio, estimatedTotalDistance, avgReturnTime } = metrics;
-  return `You are an expert dog trainer analyzing a fetch session for Nala. Session data: total throws: ${totalThrows}, avg return time: ${avgReturnTime}s, fatigue ratio: ${fatigueRatio} (ratio of last 3 return times vs first 3 — above 1.5 means significant fatigue, below 1.2 means barely tired), session rating: ${rating}/10, estimated total distance: ${estimatedTotalDistance} meters. Write 3-4 sentences analyzing the session. Mention Nala by name. Explain in plain English whether she got tired and when. End with one specific actionable recommendation for next session. Be warm and data-driven. No bullet points or headers.`;
+  const { estimatedTotalDistance, avgReturnTime } = metrics;
+  const efficiency = duration > 0
+    ? parseFloat((estimatedTotalDistance / duration).toFixed(1))
+    : 0;
+  return `You are an expert dog trainer analyzing a fetch session for Nala. Session data: total throws: ${totalThrows}, total distance: ${estimatedTotalDistance} meters, session duration: ${duration} minutes, efficiency: ${efficiency} meters per minute, avg return time: ${avgReturnTime}s. Write 3-4 sentences analyzing the session. Mention Nala by name. Comment on her energy and endurance. End with one specific actionable recommendation for next session. Be warm and data-driven. No bullet points or headers.`;
 }
 
 export async function callGemini(prompt: string, retries = 2): Promise<string> {

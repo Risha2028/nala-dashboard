@@ -7,7 +7,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
 } from "recharts";
 import { Session } from "@/lib/data";
 
@@ -18,7 +17,7 @@ interface Props {
 export default function RatingTrendChart({ sessions }: Props) {
   const data = [...sessions]
     .reverse()
-    .map((s) => ({ date: s.date.split(",")[0], rating: s.rating, id: s.id }));
+    .map((s) => ({ date: s.date.split(",")[0], efficiency: s.efficiency, id: s.id }));
 
   return (
     <div
@@ -30,7 +29,7 @@ export default function RatingTrendChart({ sessions }: Props) {
           Fitness Progress Over Time
         </h3>
         <p className="text-xs mt-0.5" style={{ color: "#94a3b8" }}>
-          Session rating trends across the past 8 sessions
+          Efficiency (m/min) across the past sessions
         </p>
       </div>
       <ResponsiveContainer width="100%" height={220}>
@@ -43,8 +42,7 @@ export default function RatingTrendChart({ sessions }: Props) {
             tickLine={false}
           />
           <YAxis
-            domain={[0, 10]}
-            ticks={[0, 2, 4, 6, 8, 10]}
+            domain={["auto", "auto"]}
             tick={{ fontSize: 11, fill: "#94a3b8" }}
             axisLine={false}
             tickLine={false}
@@ -57,12 +55,11 @@ export default function RatingTrendChart({ sessions }: Props) {
               fontSize: "12px",
               color: "#0c447c",
             }}
-            formatter={(v) => [`${v}/10`, "Rating"]}
+            formatter={(v) => [`${v} m/min`, "Efficiency"]}
           />
-          <ReferenceLine y={7} stroke="#dbeafe" strokeDasharray="4 2" />
           <Line
             type="monotone"
-            dataKey="rating"
+            dataKey="efficiency"
             stroke="#378add"
             strokeWidth={2.5}
             dot={{ r: 4, fill: "#378add", strokeWidth: 0 }}
