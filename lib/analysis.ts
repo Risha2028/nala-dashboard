@@ -63,21 +63,37 @@ export function buildPrompt(
   return `You are an expert dog trainer analyzing a fetch session for Nala. Session data: total throws: ${totalThrows}, total distance: ${estimatedTotalDistance} meters, session duration: ${duration} minutes, efficiency: ${efficiency} meters per minute, avg return time: ${avgReturnTime}s. Write 3-4 sentences analyzing the session. Mention Nala by name. Comment on her energy and endurance. End with one specific actionable recommendation for next session. Be warm and data-driven. No bullet points or headers.`;
 }
 
+// Model is configurable from Vercel (GEMINI_MODEL) so it can be swapped without a code change.
+// If a model is retired or unavailable, fall through to the next one.
+const MODELS = [
+  process.env.GEMINI_MODEL,
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+].filter((m): m is string => !!m);
+
 export async function callGemini(prompt: string, retries = 2): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-  for (let i = 0; i <= retries; i++) {
-    try {
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("429") && i < retries) {
-        await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
-        continue;
+  let lastErr: unknown = new Error("RATE_LIMIT");
+  for (const modelName of MODELS) {
+    const model = genAI.getGenerativeModel({ model: modelName });
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+      } catch (err: unknown) {
+        lastErr = err;
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("429") && i < retries) {
+          await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+          continue;
+        }
+        if (msg.includes("404") || msg.toLowerCase().includes("not found")) {
+          console.warn(`[gemini] model ${modelName} unavailable, trying next`);
+          break; // try next model
+        }
+        if (msg.includes("429")) throw new Error("RATE_LIMIT");
+        throw err;
       }
-      if (msg.includes("429")) throw new Error("RATE_LIMIT");
-      throw err;
     }
   }
-  throw new Error("RATE_LIMIT");
+  throw lastErr;
 }

@@ -29,6 +29,7 @@ export default function SessionDetail() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        sessionId: session.id,
         totalThrows: session.totalThrows,
         duration: session.duration,
         totalDistance: session.totalDistance,
